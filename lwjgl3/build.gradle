@@ -13,8 +13,11 @@ dependencies {
   implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
 }
 
+def isMac = System.getProperty('os.name').toLowerCase().contains('mac')
+
 run {
   workingDir = assetsDir
+  if (isMac) jvmArgs '-XstartOnFirstThread' // GLFW must run on the main thread on macOS
   // forward -Dbroadside.* debug/automation properties (see SpeedwayGame.Debug)
   systemProperties System.getProperties().findAll { it.key.toString().startsWith('broadside.') }
   if (project.hasProperty('appArgs')) args project.property('appArgs').split(' ')

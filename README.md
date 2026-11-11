@@ -13,20 +13,55 @@ and keep it off the fence.
 - Everything is procedural: no image, model or sound assets. The only bundled files are the
   DejaVu fonts; see `assets/fonts/LICENSE-DejaVu.txt`.
 
+## Requirements
+
+| What | Details |
+| --- | --- |
+| **JDK 17–24** (21 recommended) | A full JDK, not just a JRE. JDK 25+ is too new for the bundled Gradle 8.14. Any vendor works, e.g. [Eclipse Temurin 21](https://adoptium.net/temurin/releases/?version=21). |
+| **Gradle** | Nothing to install: the committed wrapper (`gradlew` / `gradlew.bat`) downloads Gradle 8.14.3. |
+| **Internet (first build only)** | Gradle downloads itself plus libGDX 1.14.2, gdx-bullet, gdx-freetype and LWJGL from Maven Central (about 100 MB, cached in `~/.gradle`). Later builds work offline. |
+| **Graphics** | A GPU and driver with OpenGL 2.0 or newer (any machine from the last ~10 years). |
+| **OS** | Windows, Linux or macOS (x64 or arm64; libGDX bundles the native libraries). Developed and tested on Linux x64. |
+| Sound | Optional: if there's no audio device the game runs silently. |
+
+Installing a JDK:
+
+- **Windows:** `winget install EclipseAdoptium.Temurin.21.JDK` (or use the installer from adoptium.net)
+- **macOS:** `brew install --cask temurin@21`
+- **Debian/Ubuntu:** `sudo apt install openjdk-21-jdk`
+- **Fedora:** `sudo dnf install java-21-openjdk-devel`
+- **No admin rights:** download the Temurin 21 `.tar.gz`/`.zip`, unpack it, and point `JAVA_HOME`
+  at it. On Linux/macOS, `run.sh` also finds a JDK unpacked under `~/.local/jdk/`.
+
+Check with `java -version`. It should report 17–24; if several are installed, set `JAVA_HOME`.
+
 ## Run
 
-Needs a JDK 17+. On this machine one is installed locally in `~/.local/jdk` (no sudo); `run.sh`
-uses it automatically.
+**Linux / macOS**
 
 ```bash
-./run.sh                         # build & play (Gradle downloads libGDX on the first run)
-./gradlew dist                   # single runnable jar -> lwjgl3/build/libs/broadside-speedway.jar
-java -jar lwjgl3/build/libs/broadside-speedway.jar
-./gradlew sim                    # headless physics/AI checks (no window needed)
-./gradlew sim -PappArgs="handling 3"   # race | handling | difficulty
+./run.sh                    # build & play (the first run takes a minute while Gradle downloads)
 ```
 
-(Without `run.sh`: `export JAVA_HOME=~/.local/jdk/jdk-21*` first, then use `./gradlew`.)
+**Windows** (Command Prompt or PowerShell, in the project folder)
+
+```bat
+gradlew.bat lwjgl3:run
+```
+
+**Standalone jar** (one file with all native libraries; copy it anywhere and run it with Java 17+):
+
+```bash
+./gradlew dist              # Windows: gradlew.bat dist
+java -jar lwjgl3/build/libs/broadside-speedway.jar
+```
+
+On macOS the launcher automatically relaunches itself with `-XstartOnFirstThread`, which LWJGL
+requires there. If that fails, run `java -XstartOnFirstThread -jar broadside-speedway.jar`.
+(The macOS paths are untested; only Linux has been verified.)
+
+**Headless checks** (no window or GPU needed): `./gradlew sim`, or
+`./gradlew sim -PappArgs="handling 3"` (modes: `race`, `handling`, `difficulty`).
 
 ## Controls
 
