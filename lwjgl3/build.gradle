@@ -1,0 +1,41 @@
+apply plugin: 'application'
+
+def assetsDir = rootProject.file('assets')
+sourceSets.main.resources.srcDirs += [ assetsDir ]
+mainClassName = 'com.broadside.speedway.lwjgl3.Lwjgl3Launcher'
+application.mainClass = mainClassName
+
+dependencies {
+  implementation project(':core')
+  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+  implementation "com.badlogicgames.gdx:gdx-bullet-platform:$gdxVersion:natives-desktop"
+  implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+}
+
+run {
+  workingDir = assetsDir
+  // forward -Dbroadside.* debug/automation properties (see SpeedwayGame.Debug)
+  systemProperties System.getProperties().findAll { it.key.toString().startsWith('broadside.') }
+  if (project.hasProperty('appArgs')) args project.property('appArgs').split(' ')
+}
+
+// Headless AI race simulation (no window/GPU needed): ./gradlew sim
+tasks.register('sim', JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  mainClass = 'com.broadside.speedway.lwjgl3.SimMain'
+  workingDir = assetsDir
+  if (project.hasProperty('appArgs')) args project.property('appArgs').split(' ')
+}
+
+// Single runnable jar: ./gradlew dist  -> lwjgl3/build/libs/broadside-speedway.jar
+tasks.register('dist', Jar) {
+  archiveFileName = 'broadside-speedway.jar'
+  manifest { attributes 'Main-Class': mainClassName }
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  from files(sourceSets.main.output.classesDirs)
+  from files(sourceSets.main.output.resourcesDir)
+  from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+  exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
+  dependsOn classes, ':core:jar'
+}
